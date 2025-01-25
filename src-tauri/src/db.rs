@@ -119,15 +119,37 @@ pub fn init(app: &mut tauri::App) {
 
   ensure_dir_exists(&tauri::api::path::app_data_dir(&config).unwrap()); // canonicalize will work only if path exists
 
+  let home_dir = dirs::home_dir().expect("Could not find home directory");
+  let config_dir = home_dir.join(".config").join(&config.tauri.bundle.identifier);
+  ensure_dir_exists(&config_dir);
+
+  let config_file = config_dir.join("config.yaml");
+  println!("Config file path is {}", config_file.display());
+
+  let mut custom_app_data_dir = String::new();
+  if config_file.exists() {
+    let config_content = fs::read_to_string(&config_file).expect("Failed to read config file");
+    let config_yaml: serde_yaml::Value = serde_yaml::from_str(&config_content).expect("Failed to parse YAML");
+    custom_app_data_dir = config_yaml["app_data_dir"].as_str().unwrap_or("").to_string();
+  }
+
+  let mut app_data_dir = tauri::api::path::app_data_dir(&config)
+  .expect("failed to retrieve app_data_dir")
+  .canonicalize()
+  .expect("Failed to canonicalize app_data_dir");
+
+  if !custom_app_data_dir.is_empty() {
+    app_data_dir = PathBuf::from(custom_app_data_dir);
+  }
+
+  println!("App data path is {}", app_data_dir.display());
+
   let _ = APP_CONSTANTS.set(AppConstants {
     #[cfg(not(debug_assertions))]
     app_dev_data_dir: std::path::PathBuf::from(resource_path),
     #[cfg(debug_assertions)]
     app_dev_data_dir: std::path::PathBuf::from(local_dev_path),
-    app_data_dir: tauri::api::path::app_data_dir(&config)
-      .expect("failed to retrieve app_data_dir")
-      .canonicalize()
-      .expect("Failed to canonicalize app_data_dir"),
+    app_data_dir: app_data_dir,
     app_detect_languages_supported: [
       "c",
       "cpp",
