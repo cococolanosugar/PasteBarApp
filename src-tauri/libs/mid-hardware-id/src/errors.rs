@@ -29,3 +29,9 @@ impl fmt::Display for MIDError {
         }
     }
 }
+
+impl From<std::io::Error> for MIDError {
+    fn from(error: std::io::Error) -> Self {
+        MIDError::ExecuteProcessError(error)
+    }
+}
