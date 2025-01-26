@@ -98,7 +98,7 @@
       }
     },
     "updater": {
-      "active": true,
+      "active": false,
       "endpoints": [
         "https://updater.pastebar.app/check/{{target}}/{{arch}}/{{current_version}}"
       ],
