@@ -9,3 +9,16 @@ macro_rules! debug {
         }
     };
 }
+
+#[cfg(target_os = "linux")]
+pub fn run_shell_comand<I, S>(command: &str, args: I) -> Result<String, MIDError>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    let output = Command::new(command).args(args).output()?;
+    if !output.status.success() {
+        return Err(MIDError::CommandError);
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
