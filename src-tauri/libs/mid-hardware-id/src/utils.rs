@@ -18,7 +18,10 @@ where
 {
     let output = Command::new(command).args(args).output()?;
     if !output.status.success() {
-        return Err(MIDError::CommandError);
+        return Err(MIDError::ExecuteProcessError(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Command execution failed"
+        )));
     }
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
